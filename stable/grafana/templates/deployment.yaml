@@ -62,6 +62,12 @@ spec:
           resources:
 {{ toYaml .Values.server.resources | indent 12 }}
           volumeMounts:
+            {{- if .Values.server.provisioning.enabled }}
+            - name: provisioning-volume 
+              mountPath: {{ default "/var/lib/grafana/provisioning" .Values.server.provisioningLocalPath }}/datasources
+            - name: provisioning-dashboards-volume 
+              mountPath: {{ default "/var/lib/grafana/provisioning" .Values.server.provisioningLocalPath }}/dashboards
+            {{- end }}
             - name: config-volume
               mountPath: {{ default "/etc/grafana" .Values.server.configLocalPath | quote }}
             - name: dashboard-volume
@@ -77,6 +83,14 @@ spec:
         - name: dashboard-volume
           configMap:
             name: {{ template "grafana.server.fullname" . }}-dashs
+        {{- if .Values.server.provisioning.enabled }}
+        - name: provisioning-volume 
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}-pdata
+        {{- end }}
+        - name: provisioning-dashboards-volume
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}-pdash
         - name: storage-volume
       {{- if .Values.server.persistentVolume.enabled }}
           persistentVolumeClaim:
